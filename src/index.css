@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-sans: "DM Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --color-sus-canvas: #f4f7fa;
+  --color-sus-surface: #ffffff;
+  --color-sus-subtle: #edf3f8;
+  --color-sus-border: #cbd5e1;
+  --color-sus-ink: #0f172a;
+  --color-sus-muted: #475569;
+  --color-sus-cobalt: #0052a3;
+  --color-sus-cobalt-dark: #003e7e;
+  --color-sus-teal: #0e7490;
+  --color-sus-crimson: #c81e3a;
+  --color-sus-ochre: #b45309;
+  --color-sus-emerald: #047857;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+    font-family: var(--font-sans);
+    background-color: #f4f7fa;
+    color: #0f172a;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  button,
+  a {
+    cursor: pointer;
+  }
+
+  :focus-visible {
+    outline: 2px solid #0052a3;
+    outline-offset: 2px;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Crisp light scientific scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #edf3f8;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
