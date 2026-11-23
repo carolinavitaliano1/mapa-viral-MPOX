@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BiostatisticsView } from './components/BiostatisticsView';
+import { ClassroomModal } from './components/ClassroomModal';
 import { GithubModal } from './components/GithubModal';
 import { GlobeView } from './components/GlobeView';
 import { PreventionView } from './components/PreventionView';
@@ -7,12 +8,15 @@ import { ActiveSection, TopNav } from './components/TopNav';
 import { VirusView } from './components/VirusView';
 import { DEFAULT_GITHUB_URL } from './data/mpoxTimeline';
 import { useLiveMpoxData } from './hooks/useLiveMpoxData';
+import { ClassroomPostDraft } from './utils/googleClassroomApi';
 
 const GITHUB_STORAGE_KEY = 'atlas_mpox_sus_github_url';
 
 export default function App() {
   const [activeSection, setActiveSection] = useState<ActiveSection>('mapa');
   const [githubModalOpen, setGithubModalOpen] = useState(false);
+  const [classroomModalOpen, setClassroomModalOpen] = useState(false);
+  const [classroomDraft, setClassroomDraft] = useState<ClassroomPostDraft | null>(null);
   const liveData = useLiveMpoxData();
   const [githubUrl, setGithubUrl] = useState<string>(() => {
     try {
@@ -31,23 +35,37 @@ export default function App() {
     }
   }, [githubUrl]);
 
+  const handleOpenClassroomWithDraft = (draft?: ClassroomPostDraft) => {
+    setClassroomDraft(draft ?? null);
+    setClassroomModalOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-[#F4F7FA] text-[#0F172A]">
       <TopNav
         activeSection={activeSection}
         onChangeSection={setActiveSection}
         onOpenGithubModal={() => setGithubModalOpen(true)}
+        onOpenClassroomModal={() => handleOpenClassroomWithDraft()}
       />
 
-      {activeSection === 'mapa' && <GlobeView liveData={liveData} />}
+      {activeSection === 'mapa' && (
+        <GlobeView
+          liveData={liveData}
+          onShareToClassroom={(draft) => handleOpenClassroomWithDraft(draft)}
+        />
+      )}
 
-      {activeSection === 'virus' && <VirusView />}
+      {activeSection === 'virus' && (
+        <VirusView onShareToClassroom={(draft) => handleOpenClassroomWithDraft(draft)} />
+      )}
 
       {activeSection === 'dados' && (
         <>
           <BiostatisticsView
             liveData={liveData}
             onOpenGithubModal={() => setGithubModalOpen(true)}
+            onShareToClassroom={(draft) => handleOpenClassroomWithDraft(draft)}
           />
           <SiteFooter />
         </>
@@ -55,7 +73,7 @@ export default function App() {
 
       {activeSection === 'prevencao' && (
         <>
-          <PreventionView />
+          <PreventionView onShareToClassroom={(draft) => handleOpenClassroomWithDraft(draft)} />
           <SiteFooter />
         </>
       )}
@@ -65,6 +83,13 @@ export default function App() {
         githubUrl={githubUrl}
         onSaveUrl={(next) => setGithubUrl(next)}
         onClose={() => setGithubModalOpen(false)}
+      />
+
+      <ClassroomModal
+        open={classroomModalOpen}
+        onClose={() => setClassroomModalOpen(false)}
+        initialDraft={classroomDraft}
+        liveData={liveData}
       />
     </div>
   );

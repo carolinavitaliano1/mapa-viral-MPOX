@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Code2, Menu, X } from 'lucide-react';
+import { Code2, GraduationCap, Menu, X } from 'lucide-react';
 
 export type ActiveSection = 'mapa' | 'virus' | 'dados' | 'prevencao';
 
@@ -7,6 +7,7 @@ interface TopNavProps {
   activeSection: ActiveSection;
   onChangeSection: (section: ActiveSection) => void;
   onOpenGithubModal: () => void;
+  onOpenClassroomModal: () => void;
 }
 
 const NAV_ITEMS: { id: ActiveSection; label: string }[] = [
@@ -20,6 +21,7 @@ export const TopNav: React.FC<TopNavProps> = ({
   activeSection,
   onChangeSection,
   onOpenGithubModal,
+  onOpenClassroomModal,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -30,7 +32,7 @@ export const TopNav: React.FC<TopNavProps> = ({
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#CBD5E1] bg-white">
-      <div className="mx-auto flex h-14 max-w-[1440px] items-center justify-between gap-8 px-4 sm:px-6">
+      <div className="mx-auto flex h-14 max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6">
         {/* Zone 1: Single-element brand wordmark */}
         <button
           type="button"
@@ -71,15 +73,24 @@ export const TopNav: React.FC<TopNavProps> = ({
           })}
         </nav>
 
-        {/* Zone 3: Single primary action button */}
+        {/* Zone 3: Google Classroom & GitHub action buttons */}
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
+            onClick={onOpenClassroomModal}
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-[#0F766E] bg-[#F0FDFA] px-3 py-2 text-xs font-semibold text-[#0F766E] whitespace-nowrap shrink-0 transition-colors hover:bg-[#0F766E] hover:text-white"
+          >
+            <GraduationCap className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span>Google Classroom</span>
+          </button>
+
+          <button
+            type="button"
             onClick={onOpenGithubModal}
-            className="hidden sm:inline-flex items-center gap-2 rounded-lg bg-[#0052A3] px-3.5 py-2 text-xs font-semibold text-white whitespace-nowrap shrink-0 transition-colors hover:bg-[#003E7E]"
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-[#0052A3] px-3 py-2 text-xs font-semibold text-white whitespace-nowrap shrink-0 transition-colors hover:bg-[#003E7E]"
           >
             <Code2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            <span>Ver Código e Scripts no GitHub</span>
+            <span>Código e Scripts</span>
           </button>
 
           <button
@@ -122,9 +133,20 @@ export const TopNav: React.FC<TopNavProps> = ({
               type="button"
               onClick={() => {
                 setMobileMenuOpen(false);
+                onOpenClassroomModal();
+              }}
+              className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-[#0F766E] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#115E59]"
+            >
+              <GraduationCap className="h-4 w-4" aria-hidden="true" />
+              <span>Google Classroom (Turmas e Atividades)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
                 onOpenGithubModal();
               }}
-              className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-[#0052A3] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#003E7E]"
+              className="mt-1.5 inline-flex items-center justify-center gap-2 rounded-lg bg-[#0052A3] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#003E7E]"
             >
               <Code2 className="h-4 w-4" aria-hidden="true" />
               <span>Ver Código e Scripts no GitHub</span>

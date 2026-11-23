@@ -9,6 +9,7 @@ import {
   Cloud,
   Compass,
   Globe2,
+  GraduationCap,
   Info,
   Pause,
   Play,
@@ -20,9 +21,11 @@ import { MPOX_STEPS } from '../data/mpoxTimeline';
 import { LiveMpoxController } from '../hooks/useLiveMpoxData';
 import { CountryLiveStats } from '../types/liveMpox';
 import { GlobeSurfaceTheme, MpoxGlobe } from '../three/MpoxGlobe';
+import { ClassroomPostDraft } from '../utils/googleClassroomApi';
 
 interface GlobeViewProps {
   liveData: LiveMpoxController;
+  onShareToClassroom?: (draft: ClassroomPostDraft) => void;
 }
 
 function getLiveStatsForStep(
@@ -58,7 +61,7 @@ function formatIsoToBrDate(iso: string): string {
   return `${d}/${m}/${y}`;
 }
 
-export const GlobeView: React.FC<GlobeViewProps> = ({ liveData }) => {
+export const GlobeView: React.FC<GlobeViewProps> = ({ liveData, onShareToClassroom }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [focusTrigger, setFocusTrigger] = useState(0);
   const [panelOpen, setPanelOpen] = useState(true);
@@ -341,16 +344,45 @@ export const GlobeView: React.FC<GlobeViewProps> = ({ liveData }) => {
                 </div>
               )}
 
-              <div className="mt-4 flex items-center justify-between border-t border-[#E2E8F0] pt-3 text-xs text-[#475569]">
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[#E2E8F0] pt-3 text-xs text-[#475569]">
                 <span>Fonte: {activeStep.source}</span>
-                <button
-                  type="button"
-                  onClick={handleRecenter}
-                  className="inline-flex items-center gap-1 font-semibold text-[#0052A3] transition-colors hover:text-[#003E7E]"
-                >
-                  <Compass className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>Focar</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  {onShareToClassroom && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onShareToClassroom({
+                          kind: 'assignment',
+                          title: `Estudo de Caso (${activeStep.yearLabel}): ${activeStep.title}`,
+                          description:
+                            `Marco Histórico ${activeStep.id}/${MPOX_STEPS.length} — ${activeStep.location} (${activeStep.yearLabel})\n` +
+                            `Clado / Linhagem: ${activeStep.clade}\n\n` +
+                            `Contexto Epidemiológico:\n${activeStep.summary}\n\n` +
+                            `Destaque em Saúde Pública:\n${activeStep.keyHighlight}\n\n` +
+                            `Questões para o Estudante de Farmácia:\n` +
+                            `1. Analise no Globo 3D a rota geográfica e o contexto de transmissão deste marco (${activeStep.location}).\n` +
+                            `2. Quais implicações de vigilância epidemiológica, diagnóstico laboratorial (qPCR) e assistência farmacêutica este evento traz para o SUS?`,
+                          maxPoints: 100,
+                          topicName: '2. Epidemiologia Histórica e Clados',
+                          sourceBadge: `Globo 3D · Marco ${activeStep.shortYear}`,
+                        })
+                      }
+                      className="inline-flex items-center gap-1 rounded-md border border-[#99F6E4] bg-[#F0FDFA] px-2 py-1 text-[11px] font-semibold text-[#0F766E] transition-colors hover:bg-[#0F766E] hover:text-white"
+                      title="Publicar estudo de caso deste marco histórico no Google Classroom"
+                    >
+                      <GraduationCap className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span>Criar Atividade</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleRecenter}
+                    className="inline-flex items-center gap-1 font-semibold text-[#0052A3] transition-colors hover:text-[#003E7E]"
+                  >
+                    <Compass className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>Focar</span>
+                  </button>
+                </div>
               </div>
             </motion.div>
           </AnimatePresence>

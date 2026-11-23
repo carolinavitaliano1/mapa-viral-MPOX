@@ -7,6 +7,7 @@ import {
   Eye,
   EyeOff,
   FlaskConical,
+  GraduationCap,
   Info,
   Layers,
   Maximize2,
@@ -19,6 +20,11 @@ import {
 import { VIRUS_STRUCTURES, VirusPartId } from '../data/virusAnatomy';
 import { MpoxVirusScene } from '../three/MpoxVirusScene';
 import { VirusCutMode } from '../three/virusGeometry';
+import { ClassroomPostDraft } from '../utils/googleClassroomApi';
+
+interface VirusViewProps {
+  onShareToClassroom?: (draft: ClassroomPostDraft) => void;
+}
 
 const ALL_VISIBLE: Record<VirusPartId, boolean> = {
   outer_membrane: true,
@@ -30,7 +36,7 @@ const ALL_VISIBLE: Record<VirusPartId, boolean> = {
   dna_genome: true,
 };
 
-export const VirusView: React.FC = () => {
+export const VirusView: React.FC<VirusViewProps> = ({ onShareToClassroom }) => {
   const [selectedId, setSelectedId] = useState<VirusPartId | null>(null);
   const [visibility, setVisibility] = useState<Record<VirusPartId, boolean>>(ALL_VISIBLE);
   const [explodePct, setExplodePct] = useState<number>(0);
@@ -438,7 +444,47 @@ export const VirusView: React.FC = () => {
                 )}
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                {onShareToClassroom && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selected) {
+                        onShareToClassroom({
+                          kind: 'assignment',
+                          title: `Morfologia Viral 3D: ${selected.name} (${selected.layerScale})`,
+                          description:
+                            `Inspeção Morfológica e Farmacológica no Modelo 3D do Vírus Mpox (MPXV)\n` +
+                            `Estrutura Selecionada: ${selected.name} (${selected.layerScale})\n\n` +
+                            `Função Biológica:\n${selected.biology}\n\n` +
+                            `Importância em Saúde Pública e Farmácia:\n${selected.publicHealth}\n\n` +
+                            `Atividade Prática:\n` +
+                            `1. Localize a estrutura "${selected.name}" no corte transversal 3D do Atlas Mpox · SUS (utilize a Vista Explodida para observar sua relação anatômica com as demais camadas).\n` +
+                            `2. Explique como essa estrutura contribui para o ciclo replicativo do Orthopoxvirus ou atua como alvo diagnóstico/terapêutico na assistência farmacêutica.`,
+                          maxPoints: 100,
+                          topicName: '1. Virologia e Morfologia 3D',
+                          sourceBadge: `Vírus 3D · ${selected.name}`,
+                        });
+                      } else {
+                        onShareToClassroom({
+                          kind: 'assignment',
+                          title: 'Prática 3D: Arquitetura Completa do Vírus Mpox (Orthopoxvirus)',
+                          description:
+                            `Utilizando o modelo 3D interativo em corte transversal do Monkeypox virus (MPXV):\n\n` +
+                            `1. Compare as 7 estruturas concêntricas (Membrana Externa, Túbulos de Superfície, Membrana Interna, Corpos Laterais, Camada Paliçada, Núcleo Bicôncavo e Genoma dsDNA ~197 kb).\n` +
+                            `2. Explique a diferença entre as formas infectantes IMV e EEV e o mecanismo de ação do antiviral Tecovirimat (inibidor de VP37).`,
+                          maxPoints: 100,
+                          topicName: '1. Virologia e Morfologia 3D',
+                          sourceBadge: 'Vírus 3D · Visão Geral',
+                        });
+                      }
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#99F6E4] bg-[#F0FDFA] px-2.5 py-1 text-[11px] font-semibold text-[#0F766E] transition hover:bg-[#0F766E] hover:text-white"
+                  >
+                    <GraduationCap className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>Criar Atividade no Classroom</span>
+                  </button>
+                )}
                 {selected && (
                   <button
                     type="button"

@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
-import { ShieldCheck } from 'lucide-react';
+import { GraduationCap, ShieldCheck } from 'lucide-react';
 import { SUS_WORKFLOW_STAGES } from '../data/mpoxTimeline';
+import { ClassroomPostDraft } from '../utils/googleClassroomApi';
 
-export const PreventionView: React.FC = () => {
+interface PreventionViewProps {
+  onShareToClassroom?: (draft: ClassroomPostDraft) => void;
+}
+
+export const PreventionView: React.FC<PreventionViewProps> = ({ onShareToClassroom }) => {
   const [activeStageIdx, setActiveStageIdx] = useState(0);
   const currentStage = SUS_WORKFLOW_STAGES[activeStageIdx];
 
@@ -67,12 +72,40 @@ export const PreventionView: React.FC = () => {
 
         {/* Active Stage Detail Panel */}
         <div className="mt-5 rounded-lg border border-[#D5E0EA] bg-[#F8FAFC] p-5">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-[#475569]">
-            <span className="font-mono font-semibold text-[#0052A3]">
-              Etapa {currentStage.step}
-            </span>
-            <span aria-hidden="true">·</span>
-            <span>{currentStage.unit}</span>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-[#475569]">
+              <span className="font-mono font-semibold text-[#0052A3]">
+                Etapa {currentStage.step}
+              </span>
+              <span aria-hidden="true">·</span>
+              <span>{currentStage.unit}</span>
+            </div>
+
+            {onShareToClassroom && (
+              <button
+                type="button"
+                onClick={() =>
+                  onShareToClassroom({
+                    kind: 'question',
+                    title: `Discussão Clínica SUS (Etapa ${currentStage.step}): ${currentStage.title}`,
+                    description:
+                      `Linha de Cuidado e Vigilância da Mpox no SUS — Etapa ${currentStage.step} (${currentStage.unit})\n\n` +
+                      `Síntese da Conduta:\n${currentStage.description}\n\n` +
+                      `Ações Prioritárias:\n` +
+                      currentStage.actions.map((a, i) => `${i + 1}. ${a}`).join('\n') +
+                      `\n\nQuestão Discursiva para a Turma de Farmácia:\n` +
+                      `Com base nas diretrizes do Ministério da Saúde e ANVISA para a etapa "${currentStage.title}", descreva o papel do farmacêutico na orientação ao paciente, biossegurança da equipe e articulação com a vigilância epidemiológica.`,
+                    maxPoints: 10,
+                    topicName: '4. Vigilância, Farmacoterapia e Prevenção no SUS',
+                    sourceBadge: `Fluxo SUS · Etapa ${currentStage.step}`,
+                  })
+                }
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[#99F6E4] bg-[#F0FDFA] px-3 py-1.5 text-xs font-semibold text-[#0F766E] transition hover:bg-[#0F766E] hover:text-white"
+              >
+                <GraduationCap className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>Enviar Questão ao Classroom</span>
+              </button>
+            )}
           </div>
           <h3 className="mt-1.5 font-display text-xl font-bold text-[#0F172A]">
             {currentStage.title}

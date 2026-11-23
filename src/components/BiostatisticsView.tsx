@@ -1,16 +1,18 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Calculator, Check, Code2, Copy } from 'lucide-react';
+import { Calculator, Check, Code2, Copy, GraduationCap } from 'lucide-react';
 import {
   CLADE_COMPARISON,
   PYTHON_SCRIPT_CONTENT,
   R_SCRIPT_CONTENT,
 } from '../data/mpoxTimeline';
 import { LiveMpoxController } from '../hooks/useLiveMpoxData';
+import { ClassroomPostDraft } from '../utils/googleClassroomApi';
 import { LiveSurveillancePanel } from './LiveSurveillancePanel';
 
 interface BiostatisticsViewProps {
   liveData: LiveMpoxController;
   onOpenGithubModal: () => void;
+  onShareToClassroom?: (draft: ClassroomPostDraft) => void;
 }
 
 interface CalcPreset {
@@ -23,6 +25,7 @@ interface CalcPreset {
 export const BiostatisticsView: React.FC<BiostatisticsViewProps> = ({
   liveData,
   onOpenGithubModal,
+  onShareToClassroom,
 }) => {
   const { ufNodes, customFeedMeta, snapshot } = liveData;
   const [selectedUf, setSelectedUf] = useState<string>('SP');
@@ -443,6 +446,32 @@ export const BiostatisticsView: React.FC<BiostatisticsViewProps> = ({
                 </>
               )}
             </button>
+
+            {onShareToClassroom && (
+              <button
+                type="button"
+                onClick={() =>
+                  onShareToClassroom({
+                    kind: 'material',
+                    title:
+                      scriptLang === 'r'
+                        ? 'Material Prático: Script de Bioestatística Mpox em R (tidyverse · epiR)'
+                        : 'Material Prático: Script de Bioestatística Mpox em Python (pandas · scipy)',
+                    description:
+                      `Roteiro reprodutível para análise epidemiológica da Mpox (${
+                        scriptLang === 'r' ? 'Linguagem R' : 'Python 3'
+                      }) — cálculo de incidência por 100 mil hab., taxa de letalidade com IC 95% (Wilson) e visualização por UF:\n\n` +
+                      activeCode,
+                    topicName: '3. Bioestatística em Saúde Pública',
+                    sourceBadge: `Bioestatística · ${scriptLang === 'r' ? 'Script R' : 'Script Python'}`,
+                  })
+                }
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[#99F6E4] bg-[#F0FDFA] px-3 py-2 text-xs font-semibold text-[#0F766E] transition-colors hover:bg-[#0F766E] hover:text-white"
+              >
+                <GraduationCap className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>Publicar no Classroom</span>
+              </button>
+            )}
           </div>
         </div>
 
