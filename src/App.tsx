@@ -3,6 +3,7 @@ import { BiostatisticsView } from './components/BiostatisticsView';
 import { ClassroomModal } from './components/ClassroomModal';
 import { GithubModal } from './components/GithubModal';
 import { GlobeView } from './components/GlobeView';
+import { HomeView } from './components/HomeView';
 import { PreventionView } from './components/PreventionView';
 import { ActiveSection, TopNav } from './components/TopNav';
 import { VirusView } from './components/VirusView';
@@ -13,7 +14,7 @@ import { ClassroomPostDraft } from './utils/googleClassroomApi';
 const GITHUB_STORAGE_KEY = 'atlas_mpox_sus_github_url';
 
 export default function App() {
-  const [activeSection, setActiveSection] = useState<ActiveSection>('mapa');
+  const [activeSection, setActiveSection] = useState<ActiveSection>('inicio');
   const [githubModalOpen, setGithubModalOpen] = useState(false);
   const [classroomModalOpen, setClassroomModalOpen] = useState(false);
   const [classroomDraft, setClassroomDraft] = useState<ClassroomPostDraft | null>(null);
@@ -35,6 +36,11 @@ export default function App() {
     }
   }, [githubUrl]);
 
+  const handleChangeSection = (section: ActiveSection) => {
+    setActiveSection(section);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleOpenClassroomWithDraft = (draft?: ClassroomPostDraft) => {
     setClassroomDraft(draft ?? null);
     setClassroomModalOpen(true);
@@ -44,10 +50,22 @@ export default function App() {
     <div className="min-h-screen bg-[#F4F7FA] text-[#0F172A]">
       <TopNav
         activeSection={activeSection}
-        onChangeSection={setActiveSection}
+        onChangeSection={handleChangeSection}
         onOpenGithubModal={() => setGithubModalOpen(true)}
         onOpenClassroomModal={() => handleOpenClassroomWithDraft()}
       />
+
+      {activeSection === 'inicio' && (
+        <>
+          <HomeView
+            liveData={liveData}
+            onNavigate={handleChangeSection}
+            onOpenClassroomModal={() => handleOpenClassroomWithDraft()}
+            onOpenGithubModal={() => setGithubModalOpen(true)}
+          />
+          <SiteFooter />
+        </>
+      )}
 
       {activeSection === 'mapa' && (
         <GlobeView
