@@ -29,28 +29,69 @@ provider.setCustomParameters({
   prompt: 'consent',
 });
 
+export const CLASSROOM_OWNER_EMAIL = 'carolinavitaliano1@gmail.com';
+export const OFFICIAL_CLASSROOM_INVITE_LINK =
+  'https://classroom.google.com/c/OTAwOTg5MDU4NTY0?cjc=f26my4bk';
+
+export const isClassroomOwner = (user: User | null | undefined): boolean =>
+  Boolean(user?.email && user.email.toLowerCase() === CLASSROOM_OWNER_EMAIL.toLowerCase());
+
 // Flag to indicate if we are in the middle of a sign-in flow.
 let isSigningIn = false;
 // Cache the access token strictly in memory (never localStorage or sessionStorage).
 let cachedAccessToken: string | null = null;
 
+interface AuthSubscriber {
+  onSuccess?: (user: User, token: string) => void;
+  onFailure?: () => void;
+}
+
+const subscribers = new Set<AuthSubscriber>();
+
+const notifySuccess = (user: User, token: string) => {
+  for (const sub of subscribers) {
+    sub.onSuccess?.(user, token);
+  }
+};
+
+const notifyFailure = () => {
+  for (const sub of subscribers) {
+    sub.onFailure?.();
+  }
+};
+
 export const initAuth = (
   onAuthSuccess?: (user: User, token: string) => void,
   onAuthFailure?: () => void
 ) => {
-  return onAuthStateChanged(auth, async (user: User | null) => {
+  const subscriber: AuthSubscriber = {
+    onSuccess: onAuthSuccess,
+    onFailure: onAuthFailure,
+  };
+  subscribers.add(subscriber);
+
+  if (auth.currentUser && cachedAccessToken) {
+    onAuthSuccess?.(auth.currentUser, cachedAccessToken);
+  }
+
+  const unsubscribeFirebase = onAuthStateChanged(auth, async (user: User | null) => {
     if (user) {
       if (cachedAccessToken) {
-        if (onAuthSuccess) onAuthSuccess(user, cachedAccessToken);
+        onAuthSuccess?.(user, cachedAccessToken);
       } else if (!isSigningIn) {
         cachedAccessToken = null;
-        if (onAuthFailure) onAuthFailure();
+        onAuthFailure?.();
       }
     } else {
       cachedAccessToken = null;
-      if (onAuthFailure) onAuthFailure();
+      onAuthFailure?.();
     }
   });
+
+  return () => {
+    subscribers.delete(subscriber);
+    unsubscribeFirebase();
+  };
 };
 
 export const googleSignIn = async (): Promise<{ user: User; accessToken: string } | null> => {
@@ -63,6 +104,7 @@ export const googleSignIn = async (): Promise<{ user: User; accessToken: string 
     }
 
     cachedAccessToken = credential.accessToken;
+    notifySuccess(result.user, cachedAccessToken);
     return { user: result.user, accessToken: cachedAccessToken };
   } catch (error) {
     console.error('Sign in error:', error);
@@ -79,4 +121,5 @@ export const getAccessToken = async (): Promise<string | null> => {
 export const logout = async () => {
   await auth.signOut();
   cachedAccessToken = null;
+  notifyFailure();
 };

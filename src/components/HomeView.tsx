@@ -976,7 +976,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   {showcase.courseWork.length === 0 ? (
                     <p className="mt-3 text-xs leading-relaxed text-[#64748B]">
                       {isAuthed
-                        ? 'Esta turma ainda não possui atividades publicadas. Use "Gerenciar e Publicar" ou os botões nos módulos 3D para criar.'
+                        ? isOwner
+                          ? 'Esta turma ainda não possui atividades publicadas. Use "Gerenciar e Publicar" ou os botões nos módulos 3D para criar.'
+                          : 'Esta turma ainda não possui atividades publicadas no momento.'
                         : 'Conecte sua conta Google Classroom acima para exibir em tempo real as atividades publicadas nesta turma.'}
                     </p>
                   ) : (
@@ -1025,7 +1027,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   {showcase.materials.length === 0 ? (
                     <p className="mt-3 text-xs leading-relaxed text-[#64748B]">
                       {isAuthed
-                        ? 'Nenhum material de apoio publicado ainda. Você pode publicar scripts R/Python e fichas técnicas diretamente pelo app.'
+                        ? isOwner
+                          ? 'Nenhum material de apoio publicado ainda. Você pode publicar scripts R/Python e fichas técnicas diretamente pelo app.'
+                          : 'Nenhum material de apoio publicado na turma no momento.'
                         : 'Conecte sua conta Google Classroom para listar todos os materiais de referência compartilhados com a turma.'}
                     </p>
                   ) : (
@@ -1245,8 +1249,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
               Navegue pelas Páginas do Atlas Mpox
             </h2>
             <p className="mt-2 text-sm text-[#475569]">
-              Cada módulo foi organizado para estudo autônomo, demonstração em sala de aula e envio
-              direto de atividades para a turma no Google Classroom.
+              Cada módulo foi organizado para estudo autônomo, demonstração em sala de aula e
+              acompanhamento dos conteúdos da turma no Google Classroom.
             </p>
           </div>
 

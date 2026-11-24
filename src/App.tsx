@@ -10,6 +10,7 @@ import { VirusView } from './components/VirusView';
 import { DEFAULT_GITHUB_URL } from './data/mpoxTimeline';
 import { useLiveMpoxData } from './hooks/useLiveMpoxData';
 import { ClassroomPostDraft } from './utils/googleClassroomApi';
+import { initAuth, isClassroomOwner } from './utils/googleClassroomAuth';
 
 const GITHUB_STORAGE_KEY = 'atlas_mpox_sus_github_url';
 
@@ -18,6 +19,7 @@ export default function App() {
   const [githubModalOpen, setGithubModalOpen] = useState(false);
   const [classroomModalOpen, setClassroomModalOpen] = useState(false);
   const [classroomDraft, setClassroomDraft] = useState<ClassroomPostDraft | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
   const liveData = useLiveMpoxData();
   const [githubUrl, setGithubUrl] = useState<string>(() => {
     try {
@@ -27,6 +29,19 @@ export default function App() {
       return DEFAULT_GITHUB_URL;
     }
   });
+
+  useEffect(() => {
+    const unsubscribe = initAuth(
+      (authedUser) => {
+        setIsOwner(isClassroomOwner(authedUser));
+      },
+      () => {
+        setIsOwner(false);
+        setClassroomModalOpen(false);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     try {
@@ -42,14 +57,20 @@ export default function App() {
   };
 
   const handleOpenClassroomWithDraft = (draft?: ClassroomPostDraft) => {
+    if (!isOwner) return;
     setClassroomDraft(draft ?? null);
     setClassroomModalOpen(true);
   };
+
+  const ownerShareHandler = isOwner
+    ? (draft: ClassroomPostDraft) => handleOpenClassroomWithDraft(draft)
+    : undefined;
 
   return (
     <div className="min-h-screen bg-[#F4F7FA] text-[#0F172A]">
       <TopNav
         activeSection={activeSection}
+        isOwner={isOwner}
         onChangeSection={handleChangeSection}
         onOpenGithubModal={() => setGithubModalOpen(true)}
         onOpenClassroomModal={() => handleOpenClassroomWithDraft()}
@@ -68,22 +89,17 @@ export default function App() {
       )}
 
       {activeSection === 'mapa' && (
-        <GlobeView
-          liveData={liveData}
-          onShareToClassroom={(draft) => handleOpenClassroomWithDraft(draft)}
-        />
+        <GlobeView liveData={liveData} onShareToClassroom={ownerShareHandler} />
       )}
 
-      {activeSection === 'virus' && (
-        <VirusView onShareToClassroom={(draft) => handleOpenClassroomWithDraft(draft)} />
-      )}
+      {activeSection === 'virus' && <VirusView onShareToClassroom={ownerShareHandler} />}
 
       {activeSection === 'dados' && (
         <>
           <BiostatisticsView
             liveData={liveData}
             onOpenGithubModal={() => setGithubModalOpen(true)}
-            onShareToClassroom={(draft) => handleOpenClassroomWithDraft(draft)}
+            onShareToClassroom={ownerShareHandler}
           />
           <SiteFooter />
         </>
@@ -91,7 +107,7 @@ export default function App() {
 
       {activeSection === 'prevencao' && (
         <>
-          <PreventionView onShareToClassroom={(draft) => handleOpenClassroomWithDraft(draft)} />
+          <PreventionView onShareToClassroom={ownerShareHandler} />
           <SiteFooter />
         </>
       )}
@@ -103,12 +119,14 @@ export default function App() {
         onClose={() => setGithubModalOpen(false)}
       />
 
-      <ClassroomModal
-        open={classroomModalOpen}
-        onClose={() => setClassroomModalOpen(false)}
-        initialDraft={classroomDraft}
-        liveData={liveData}
-      />
+      {isOwner && (
+        <ClassroomModal
+          open={classroomModalOpen}
+          onClose={() => setClassroomModalOpen(false)}
+          initialDraft={classroomDraft}
+          liveData={liveData}
+        />
+      )}
     </div>
   );
 }

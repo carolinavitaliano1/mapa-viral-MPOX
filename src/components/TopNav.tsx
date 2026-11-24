@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Code2, GraduationCap, Menu, X } from 'lucide-react';
+import { Code2, ExternalLink, GraduationCap, Menu, X } from 'lucide-react';
+import { OFFICIAL_CLASSROOM_INVITE_LINK } from '../utils/googleClassroomAuth';
 
 export type ActiveSection = 'inicio' | 'mapa' | 'virus' | 'dados' | 'prevencao';
 
 interface TopNavProps {
   activeSection: ActiveSection;
+  isOwner: boolean;
   onChangeSection: (section: ActiveSection) => void;
   onOpenGithubModal: () => void;
   onOpenClassroomModal: () => void;
@@ -20,6 +22,7 @@ const NAV_ITEMS: { id: ActiveSection; label: string }[] = [
 
 export const TopNav: React.FC<TopNavProps> = ({
   activeSection,
+  isOwner,
   onChangeSection,
   onOpenGithubModal,
   onOpenClassroomModal,
@@ -76,14 +79,27 @@ export const TopNav: React.FC<TopNavProps> = ({
 
         {/* Zone 3: Single primary action button */}
         <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={onOpenClassroomModal}
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-[#0F766E] px-3.5 py-2 text-xs font-semibold text-white whitespace-nowrap shrink-0 transition-colors hover:bg-[#115E59]"
-          >
-            <GraduationCap className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            <span>Google Classroom</span>
-          </button>
+          {isOwner ? (
+            <button
+              type="button"
+              onClick={onOpenClassroomModal}
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-[#0F766E] px-3.5 py-2 text-xs font-semibold text-white whitespace-nowrap shrink-0 transition-colors hover:bg-[#115E59]"
+            >
+              <GraduationCap className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span>Gerenciar Classroom</span>
+            </button>
+          ) : (
+            <a
+              href={OFFICIAL_CLASSROOM_INVITE_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-[#0F766E] px-3.5 py-2 text-xs font-semibold text-white whitespace-nowrap shrink-0 transition-colors hover:bg-[#115E59]"
+            >
+              <GraduationCap className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span>Google Classroom</span>
+              <ExternalLink className="h-3 w-3 shrink-0 opacity-85" aria-hidden="true" />
+            </a>
+          )}
 
           <button
             type="button"
@@ -121,17 +137,31 @@ export const TopNav: React.FC<TopNavProps> = ({
                 </button>
               );
             })}
-            <button
-              type="button"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onOpenClassroomModal();
-              }}
-              className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-[#0F766E] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#115E59]"
-            >
-              <GraduationCap className="h-4 w-4" aria-hidden="true" />
-              <span>Google Classroom (Turmas e Atividades)</span>
-            </button>
+            {isOwner ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenClassroomModal();
+                }}
+                className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-[#0F766E] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#115E59]"
+              >
+                <GraduationCap className="h-4 w-4" aria-hidden="true" />
+                <span>Gerenciar Classroom (Publicar)</span>
+              </button>
+            ) : (
+              <a
+                href={OFFICIAL_CLASSROOM_INVITE_LINK}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileMenuOpen(false)}
+                className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-[#0F766E] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#115E59]"
+              >
+                <GraduationCap className="h-4 w-4" aria-hidden="true" />
+                <span>Entrar na Turma (Google Classroom)</span>
+                <ExternalLink className="h-3.5 w-3.5 opacity-85" aria-hidden="true" />
+              </a>
+            )}
             <button
               type="button"
               onClick={() => {
