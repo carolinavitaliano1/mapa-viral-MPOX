@@ -9,21 +9,16 @@ import {
   CheckCircle2,
   Code2,
   Copy,
-  Edit3,
   ExternalLink,
   FolderOpen,
   Globe2,
   GraduationCap,
-  Link2,
   Loader2,
   Megaphone,
   Microscope,
-  Pin,
   RefreshCw,
-  Save,
   ShieldCheck,
   Users,
-  X,
 } from 'lucide-react';
 import { LiveMpoxController } from '../hooks/useLiveMpoxData';
 import {
@@ -43,21 +38,26 @@ import { googleSignIn, initAuth } from '../utils/googleClassroomAuth';
 import { ActiveSection } from './TopNav';
 
 const HERO_IMAGE_PATH = '/src/assets/images/hero_atlas_mpox_sus_1795474903496.jpg';
-const AUTHOR_STORAGE_KEY = 'atlas_mpox_sus_author_profile_v3';
-const CLASSROOM_SHOWCASE_STORAGE_KEY = 'atlas_mpox_sus_classroom_showcase_v1';
+const CLASSROOM_SHOWCASE_STORAGE_KEY = 'atlas_mpox_sus_classroom_showcase_v2';
+const OWNER_EMAIL = 'carolinavitaliano1@gmail.com';
+const OFFICIAL_CLASSROOM_COURSE_ID = '900989058564';
+const OFFICIAL_CLASSROOM_CODE = 'f26my4bk';
+const OFFICIAL_CLASSROOM_INVITE_LINK =
+  'https://classroom.google.com/c/OTAwOTg5MDU4NTY0?cjc=f26my4bk';
+const OFFICIAL_CLASSROOM_ALTERNATE_LINK =
+  'https://classroom.google.com/c/OTAwOTg5MDU4NTY0';
 
 interface AuthorProfile {
   name: string;
   instagram: string;
   instagramUrl: string;
   linkedinUrl: string;
-  academicId: string;
   institution: string;
   email: string;
 }
 
 interface SavedClassroomShowcase {
-  courseId?: string;
+  courseId: string;
   name: string;
   section: string;
   room: string;
@@ -73,32 +73,48 @@ interface SavedClassroomShowcase {
   syncedAt?: string;
 }
 
-const DEFAULT_AUTHOR: AuthorProfile = {
+const AUTHOR_PROFILE: AuthorProfile = {
   name: 'Carolina Vitaliano',
   instagram: '@carolgurgel_biofarma',
   instagramUrl:
     'https://www.instagram.com/carolgurgel_biofarma?lqvp=MTc3eGZ6Y2ZtOHB2cQ%3D%3D&utm_source=qr',
   linkedinUrl: 'https://www.linkedin.com/in/carolinavitaliano',
-  academicId: '',
   institution: 'Graduação em Farmácia · Projeto de Extensão em Saúde Pública e SUS',
-  email: 'carolinavitaliano1@gmail.com',
+  email: OWNER_EMAIL,
 };
 
 const DEFAULT_CLASSROOM_SHOWCASE: SavedClassroomShowcase = {
+  courseId: OFFICIAL_CLASSROOM_COURSE_ID,
   name: 'Atlas Mpox · Extensão Universitária em Farmácia (SUS)',
   section: 'Saúde Pública, Epidemiologia e Virologia Aplicada',
   room: 'Sala Virtual · Google Classroom',
   description:
     'Turma oficial do projeto de extensão para acompanhamento dos estudos de caso 3D (Globo Histórico e Morfologia do Orthopoxvirus), práticas de bioestatística em R/Python e discussão de protocolos assistenciais no SUS.',
-  enrollmentCode: '',
-  inviteLink: '',
-  alternateLink: 'https://classroom.google.com',
+  enrollmentCode: OFFICIAL_CLASSROOM_CODE,
+  inviteLink: OFFICIAL_CLASSROOM_INVITE_LINK,
+  alternateLink: OFFICIAL_CLASSROOM_ALTERNATE_LINK,
   studentCount: 0,
   topics: [
-    { courseId: 'default', topicId: 't1', name: '1. Virologia e Morfologia 3D (MPXV)' },
-    { courseId: 'default', topicId: 't2', name: '2. Epidemiologia Histórica e Clados (1958–2025)' },
-    { courseId: 'default', topicId: 't3', name: '3. Bioestatística em Saúde Pública (R & Python)' },
-    { courseId: 'default', topicId: 't4', name: '4. Vigilância, Farmacoterapia e Prevenção no SUS' },
+    {
+      courseId: OFFICIAL_CLASSROOM_COURSE_ID,
+      topicId: 't1',
+      name: '1. Virologia e Morfologia 3D (MPXV)',
+    },
+    {
+      courseId: OFFICIAL_CLASSROOM_COURSE_ID,
+      topicId: 't2',
+      name: '2. Epidemiologia Histórica e Clados (1958–2025)',
+    },
+    {
+      courseId: OFFICIAL_CLASSROOM_COURSE_ID,
+      topicId: 't3',
+      name: '3. Bioestatística em Saúde Pública (R & Python)',
+    },
+    {
+      courseId: OFFICIAL_CLASSROOM_COURSE_ID,
+      topicId: 't4',
+      name: '4. Vigilância, Farmacoterapia e Prevenção no SUS',
+    },
   ],
   courseWork: [],
   materials: [],
@@ -184,42 +200,25 @@ export const HomeView: React.FC<HomeViewProps> = ({
   // Hero image resilient fallback
   const [heroImgError, setHeroImgError] = useState(false);
 
-  // Author profile state (persisted in localStorage)
-  const [author, setAuthor] = useState<AuthorProfile>(() => {
-    try {
-      const raw = window.localStorage.getItem(AUTHOR_STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as Partial<AuthorProfile>;
-        return { ...DEFAULT_AUTHOR, ...parsed };
-      }
-    } catch {
-      // ignore storage errors
-    }
-    return DEFAULT_AUTHOR;
-  });
-  const [editingAuthor, setEditingAuthor] = useState(false);
-  const [authorDraft, setAuthorDraft] = useState<AuthorProfile>(author);
-
-  // Saved / pinned public classroom showcase
+  // Official public classroom showcase (cached live contents, always anchored to official invite link & code)
   const [showcase, setShowcase] = useState<SavedClassroomShowcase>(() => {
     try {
       const raw = window.localStorage.getItem(CLASSROOM_SHOWCASE_STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as Partial<SavedClassroomShowcase>;
-        return { ...DEFAULT_CLASSROOM_SHOWCASE, ...parsed };
+        return {
+          ...DEFAULT_CLASSROOM_SHOWCASE,
+          ...parsed,
+          courseId: OFFICIAL_CLASSROOM_COURSE_ID,
+          enrollmentCode: OFFICIAL_CLASSROOM_CODE,
+          inviteLink: OFFICIAL_CLASSROOM_INVITE_LINK,
+          alternateLink: OFFICIAL_CLASSROOM_ALTERNATE_LINK,
+        };
       }
     } catch {
       // ignore storage errors
     }
     return DEFAULT_CLASSROOM_SHOWCASE;
-  });
-  const [editingClassroomConfig, setEditingClassroomConfig] = useState(false);
-  const [configDraft, setConfigDraft] = useState({
-    name: showcase.name,
-    section: showcase.section,
-    description: showcase.description,
-    enrollmentCode: showcase.enrollmentCode,
-    inviteLink: showcase.inviteLink,
   });
 
   // Live Google Classroom Auth & API state
@@ -230,7 +229,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [classroomNotice, setClassroomNotice] = useState<string | null>(null);
 
   const [liveCourses, setLiveCourses] = useState<ClassroomCourse[]>([]);
-  const [selectedCourseId, setSelectedCourseId] = useState<string>(showcase.courseId ?? '');
+  const [selectedCourseId, setSelectedCourseId] = useState<string>(OFFICIAL_CLASSROOM_COURSE_ID);
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
@@ -286,9 +285,18 @@ export const HomeView: React.FC<HomeViewProps> = ({
       const list = await listClassroomCourses();
       setLiveCourses(list);
       if (list.length > 0) {
-        setSelectedCourseId((prev) =>
-          prev && list.some((c) => c.id === prev) ? prev : list[0].id
+        const officialMatch = list.find(
+          (c) =>
+            c.id === OFFICIAL_CLASSROOM_COURSE_ID ||
+            c.enrollmentCode === OFFICIAL_CLASSROOM_CODE
         );
+        if (officialMatch) {
+          setSelectedCourseId(officialMatch.id);
+        } else {
+          setSelectedCourseId((prev) =>
+            prev && list.some((c) => c.id === prev) ? prev : list[0].id
+          );
+        }
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -314,6 +322,10 @@ export const HomeView: React.FC<HomeViewProps> = ({
         listCourseStudents(course.id),
       ]);
 
+      const isOfficialCourse =
+        course.id === OFFICIAL_CLASSROOM_COURSE_ID ||
+        course.enrollmentCode === OFFICIAL_CLASSROOM_CODE;
+
       const nextShowcase: SavedClassroomShowcase = {
         courseId: course.id,
         name: course.name,
@@ -322,18 +334,21 @@ export const HomeView: React.FC<HomeViewProps> = ({
         description:
           course.description ||
           course.descriptionHeading ||
-          'Turma vinculada ao projeto de extensão Atlas Mpox · SUS no Google Classroom.',
-        enrollmentCode: course.enrollmentCode || showcase.enrollmentCode || '',
-        inviteLink:
-          showcase.courseId === course.id && showcase.inviteLink
-            ? showcase.inviteLink
-            : buildDirectJoinUrl({
-                alternateLink: course.alternateLink,
-                enrollmentCode: course.enrollmentCode,
-              }),
-        alternateLink: course.alternateLink || 'https://classroom.google.com',
+          DEFAULT_CLASSROOM_SHOWCASE.description,
+        enrollmentCode: isOfficialCourse
+          ? OFFICIAL_CLASSROOM_CODE
+          : course.enrollmentCode || OFFICIAL_CLASSROOM_CODE,
+        inviteLink: isOfficialCourse
+          ? OFFICIAL_CLASSROOM_INVITE_LINK
+          : buildDirectJoinUrl({
+              alternateLink: course.alternateLink,
+              enrollmentCode: course.enrollmentCode,
+            }),
+        alternateLink: isOfficialCourse
+          ? OFFICIAL_CLASSROOM_ALTERNATE_LINK
+          : course.alternateLink || OFFICIAL_CLASSROOM_ALTERNATE_LINK,
         studentCount: students.length,
-        topics,
+        topics: topics.length > 0 ? topics : DEFAULT_CLASSROOM_SHOWCASE.topics,
         courseWork,
         materials,
         announcements,
@@ -344,13 +359,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
       };
 
       persistShowcase(nextShowcase);
-      setConfigDraft({
-        name: nextShowcase.name,
-        section: nextShowcase.section,
-        description: nextShowcase.description,
-        enrollmentCode: nextShowcase.enrollmentCode,
-        inviteLink: nextShowcase.inviteLink,
-      });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg === 'AUTH_REQUIRED') {
@@ -373,7 +381,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         setUser(result.user);
         setIsAuthed(true);
         setClassroomNotice(
-          'Conta Google Classroom conectada! Selecione sua turma abaixo para exibir todos os dados e o link de entrada.'
+          'Conectado ao Google Classroom! Carregando o mural, tópicos, materiais e atividades da turma.'
         );
       }
     } catch (err) {
@@ -383,48 +391,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
     } finally {
       setIsLoggingIn(false);
     }
-  };
-
-  const handleSaveAuthor = (e: React.FormEvent) => {
-    e.preventDefault();
-    const rawIgInput = authorDraft.instagram.trim();
-    const nextIgUrl = /^https?:\/\/(www\.)?instagram\.com\//i.test(rawIgInput)
-      ? rawIgInput
-      : normalizeInstagramHandle(rawIgInput) === DEFAULT_AUTHOR.instagram
-        ? DEFAULT_AUTHOR.instagramUrl
-        : buildInstagramUrl(rawIgInput) ?? '';
-
-    const cleaned: AuthorProfile = {
-      name: authorDraft.name.trim() || DEFAULT_AUTHOR.name,
-      instagram: normalizeInstagramHandle(rawIgInput),
-      instagramUrl: nextIgUrl,
-      linkedinUrl: normalizeLinkedinUrl(authorDraft.linkedinUrl),
-      academicId: authorDraft.academicId.trim(),
-      institution: authorDraft.institution.trim() || DEFAULT_AUTHOR.institution,
-      email: authorDraft.email.trim(),
-    };
-    setAuthor(cleaned);
-    try {
-      window.localStorage.setItem(AUTHOR_STORAGE_KEY, JSON.stringify(cleaned));
-    } catch {
-      // ignore
-    }
-    setEditingAuthor(false);
-  };
-
-  const handleSaveClassroomConfig = (e: React.FormEvent) => {
-    e.preventDefault();
-    const updated: SavedClassroomShowcase = {
-      ...showcase,
-      name: configDraft.name.trim() || showcase.name,
-      section: configDraft.section.trim(),
-      description: configDraft.description.trim(),
-      enrollmentCode: configDraft.enrollmentCode.trim(),
-      inviteLink: configDraft.inviteLink.trim(),
-    };
-    persistShowcase(updated);
-    setEditingClassroomConfig(false);
-    setClassroomNotice('Dados públicos da turma e link de convite salvos nesta página inicial.');
   };
 
   const handleCopyText = async (text: string, target: 'code' | 'link') => {
@@ -444,11 +410,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
   };
 
   const directJoinUrl = buildDirectJoinUrl(showcase);
-  const hasRealJoinLink =
-    Boolean(showcase.inviteLink && /^https?:\/\//i.test(showcase.inviteLink)) ||
-    Boolean(showcase.alternateLink && showcase.alternateLink !== 'https://classroom.google.com');
-  const igUrl = buildInstagramUrl(author.instagram, author.instagramUrl);
-  const linkedinHref = author.linkedinUrl ? normalizeLinkedinUrl(author.linkedinUrl) : '';
+  const igUrl = buildInstagramUrl(AUTHOR_PROFILE.instagram, AUTHOR_PROFILE.instagramUrl);
+  const linkedinHref = normalizeLinkedinUrl(AUTHOR_PROFILE.linkedinUrl);
+  const isOwner = Boolean(user?.email && user.email.toLowerCase() === OWNER_EMAIL.toLowerCase());
 
   const globalCases = liveData.snapshot?.global.totalCases
     ? liveData.snapshot.global.totalCases.toLocaleString('pt-BR')
@@ -555,198 +519,58 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </div>
           </div>
 
-          {/* Author & Instagram / Academic Identity Block */}
+          {/* Author & Social Identity Block (Read-Only) */}
           <div className="mt-8 rounded-xl border border-[#CBD5E1] bg-white p-5">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E2E8F0] pb-3">
-              <div>
-                <p className="text-xs font-semibold text-[#0052A3]">Autoria e Coordenação</p>
-                <h2 className="mt-0.5 font-display text-lg font-bold text-[#0F172A]">
-                  {author.name}
-                </h2>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setAuthorDraft(author);
-                  setEditingAuthor((prev) => !prev);
-                }}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] px-3 py-1.5 text-xs font-semibold text-[#334155] transition-colors hover:border-[#0052A3] hover:text-[#0052A3]"
-              >
-                {editingAuthor ? (
-                  <>
-                    <X className="h-3.5 w-3.5" aria-hidden="true" />
-                    <span>Cancelar</span>
-                  </>
-                ) : (
-                  <>
-                    <Edit3 className="h-3.5 w-3.5" aria-hidden="true" />
-                    <span>Editar perfil</span>
-                  </>
-                )}
-              </button>
+            <div className="border-b border-[#E2E8F0] pb-3">
+              <p className="text-xs font-semibold text-[#0052A3]">Autoria e Coordenação</p>
+              <h2 className="mt-0.5 font-display text-lg font-bold text-[#0F172A]">
+                {AUTHOR_PROFILE.name}
+              </h2>
             </div>
 
-            {!editingAuthor ? (
-              <div className="mt-3.5 grid grid-cols-1 gap-3.5 text-xs sm:grid-cols-2">
-                <div>
-                  <div className="font-medium text-[#64748B]">Instagram</div>
-                  {author.instagram && igUrl ? (
-                    <a
-                      href={igUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-0.5 inline-flex items-center gap-1 font-mono text-sm font-semibold text-[#0052A3] hover:underline"
-                    >
-                      <span>{author.instagram}</span>
-                      <ExternalLink className="h-3 w-3 shrink-0" aria-hidden="true" />
-                    </a>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAuthorDraft(author);
-                        setEditingAuthor(true);
-                      }}
-                      className="mt-0.5 font-semibold text-[#0052A3] hover:underline"
-                    >
-                      Adicionar @Instagram
-                    </button>
-                  )}
-                </div>
+            <div className="mt-3.5 grid grid-cols-1 gap-3.5 text-xs sm:grid-cols-2">
+              <div>
+                <div className="font-medium text-[#64748B]">Instagram</div>
+                {igUrl && (
+                  <a
+                    href={igUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-0.5 inline-flex items-center gap-1 font-mono text-sm font-semibold text-[#0052A3] hover:underline"
+                  >
+                    <span>{AUTHOR_PROFILE.instagram}</span>
+                    <ExternalLink className="h-3 w-3 shrink-0" aria-hidden="true" />
+                  </a>
+                )}
+              </div>
 
-                <div>
-                  <div className="font-medium text-[#64748B]">LinkedIn</div>
-                  {linkedinHref ? (
-                    <a
-                      href={linkedinHref}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-0.5 inline-flex items-center gap-1 font-mono text-sm font-semibold text-[#0A66C2] hover:underline"
-                    >
-                      <span>{formatLinkedinLabel(linkedinHref)}</span>
-                      <ExternalLink className="h-3 w-3 shrink-0" aria-hidden="true" />
-                    </a>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAuthorDraft(author);
-                        setEditingAuthor(true);
-                      }}
-                      className="mt-0.5 inline-flex items-center gap-1 font-semibold text-[#0A66C2] hover:underline"
-                    >
-                      <span>Adicionar link do LinkedIn</span>
-                    </button>
-                  )}
-                </div>
+              <div>
+                <div className="font-medium text-[#64748B]">LinkedIn</div>
+                <a
+                  href={linkedinHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-0.5 inline-flex items-center gap-1 font-mono text-sm font-semibold text-[#0A66C2] hover:underline"
+                >
+                  <span>{formatLinkedinLabel(linkedinHref)}</span>
+                  <ExternalLink className="h-3 w-3 shrink-0" aria-hidden="true" />
+                </a>
+              </div>
 
-                <div>
-                  <div className="font-medium text-[#64748B]">Curso / Extensão</div>
-                  <div className="mt-0.5 font-medium text-[#0F172A]">{author.institution}</div>
-                </div>
-
-                <div>
-                  <div className="font-medium text-[#64748B]">
-                    {author.academicId ? 'Registro Acadêmico / Contato' : 'Contato Acadêmico'}
-                  </div>
-                  <div className="mt-0.5 font-mono text-xs font-medium text-[#1E293B]">
-                    {author.academicId ? `${author.academicId} · ` : ''}
-                    {author.email}
-                  </div>
+              <div>
+                <div className="font-medium text-[#64748B]">Curso / Extensão</div>
+                <div className="mt-0.5 font-medium text-[#0F172A]">
+                  {AUTHOR_PROFILE.institution}
                 </div>
               </div>
-            ) : (
-              <form onSubmit={handleSaveAuthor} className="mt-4 space-y-3">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-xs font-semibold text-[#1E293B]">
-                      Seu Nome Completo
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={authorDraft.name}
-                      onChange={(e) =>
-                        setAuthorDraft((prev) => ({ ...prev, name: e.target.value }))
-                      }
-                      className="mt-1 w-full rounded-lg border border-[#CBD5E1] bg-white px-3 py-1.5 text-xs text-[#0F172A] focus:border-[#0052A3] focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#1E293B]">
-                      Instagram (@usuário ou link completo)
-                    </label>
-                    <input
-                      type="text"
-                      value={authorDraft.instagram}
-                      onChange={(e) =>
-                        setAuthorDraft((prev) => ({ ...prev, instagram: e.target.value }))
-                      }
-                      placeholder="@carolgurgel_biofarma"
-                      className="mt-1 w-full rounded-lg border border-[#CBD5E1] bg-white px-3 py-1.5 font-mono text-xs text-[#0F172A] focus:border-[#0052A3] focus:outline-none"
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-semibold text-[#1E293B]">
-                      LinkedIn (URL completa ou usuário)
-                    </label>
-                    <input
-                      type="text"
-                      value={authorDraft.linkedinUrl}
-                      onChange={(e) =>
-                        setAuthorDraft((prev) => ({ ...prev, linkedinUrl: e.target.value }))
-                      }
-                      placeholder="https://www.linkedin.com/in/seu-perfil"
-                      className="mt-1 w-full rounded-lg border border-[#CBD5E1] bg-white px-3 py-1.5 font-mono text-xs text-[#0F172A] focus:border-[#0052A3] focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#1E293B]">
-                      RGM / RA / Matrícula (opcional)
-                    </label>
-                    <input
-                      type="text"
-                      value={authorDraft.academicId}
-                      onChange={(e) =>
-                        setAuthorDraft((prev) => ({ ...prev, academicId: e.target.value }))
-                      }
-                      placeholder="Ex.: RGM 12345678"
-                      className="mt-1 w-full rounded-lg border border-[#CBD5E1] bg-white px-3 py-1.5 font-mono text-xs text-[#0F172A] focus:border-[#0052A3] focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#1E293B]">
-                      Instituição / Curso
-                    </label>
-                    <input
-                      type="text"
-                      value={authorDraft.institution}
-                      onChange={(e) =>
-                        setAuthorDraft((prev) => ({ ...prev, institution: e.target.value }))
-                      }
-                      className="mt-1 w-full rounded-lg border border-[#CBD5E1] bg-white px-3 py-1.5 text-xs text-[#0F172A] focus:border-[#0052A3] focus:outline-none"
-                    />
-                  </div>
+
+              <div>
+                <div className="font-medium text-[#64748B]">Contato Acadêmico</div>
+                <div className="mt-0.5 font-mono text-xs font-medium text-[#1E293B]">
+                  {AUTHOR_PROFILE.email}
                 </div>
-                <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditingAuthor(false)}
-                    className="rounded-lg border border-[#CBD5E1] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#334155] hover:bg-[#F1F5F9]"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#0052A3] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#003E7E]"
-                  >
-                    <Save className="h-3.5 w-3.5" aria-hidden="true" />
-                    <span>Salvar Dados</span>
-                  </button>
-                </div>
-              </form>
-            )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -886,7 +710,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   <path fill="none" d="M0 0h48v48H0z" />
                 </svg>
                 <span>
-                  {isLoggingIn ? 'Conectando...' : 'Carregar minha turma do Google Classroom'}
+                  {isLoggingIn ? 'Conectando...' : 'Ver mural e atividades com Google'}
                 </span>
               </button>
             ) : (
@@ -903,78 +727,48 @@ export const HomeView: React.FC<HomeViewProps> = ({
                     }`}
                     aria-hidden="true"
                   />
-                  <span>Sincronizar Turma</span>
+                  <span>Atualizar Turma</span>
                 </button>
-                <button
-                  type="button"
-                  onClick={onOpenClassroomModal}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#0052A3] px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-[#003E7E]"
-                >
-                  <GraduationCap className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>Gerenciar e Publicar</span>
-                </button>
+                {isOwner && (
+                  <button
+                    type="button"
+                    onClick={onOpenClassroomModal}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#0052A3] px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-[#003E7E]"
+                  >
+                    <GraduationCap className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>Gerenciar e Publicar</span>
+                  </button>
+                )}
               </>
             )}
-
-            <button
-              type="button"
-              onClick={() => {
-                setConfigDraft({
-                  name: showcase.name,
-                  section: showcase.section,
-                  description: showcase.description,
-                  enrollmentCode: showcase.enrollmentCode,
-                  inviteLink: showcase.inviteLink,
-                });
-                setEditingClassroomConfig((prev) => !prev);
-              }}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 text-xs font-semibold text-[#334155] transition hover:border-[#0F766E] hover:text-[#0F766E]"
-            >
-              <Link2 className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>{editingClassroomConfig ? 'Fechar edição' : 'Editar link e código'}</span>
-            </button>
           </div>
         </div>
 
-        {/* Live Course Picker when Authenticated with Multiple Courses */}
-        {isAuthed && (
-          <div className="mt-5 flex flex-col justify-between gap-3 rounded-xl border border-[#BFD7EE] bg-[#F0F7FD] p-3.5 sm:flex-row sm:items-center">
-            <div className="flex flex-1 flex-wrap items-center gap-2.5 text-xs">
-              <span className="font-bold text-[#0052A3]">
-                Conectado como {user?.displayName || user?.email}:
+        {/* Live Course Picker for Owner when Authenticated with Multiple Courses */}
+        {isAuthed && isOwner && liveCourses.length > 1 && (
+          <div className="mt-5 flex flex-wrap items-center gap-2.5 rounded-xl border border-[#BFD7EE] bg-[#F0F7FD] p-3.5 text-xs">
+            <span className="font-bold text-[#0052A3]">
+              Coordenação ({user?.displayName || user?.email}):
+            </span>
+            {loadingCourses ? (
+              <span className="inline-flex items-center gap-1.5 text-[#334155]">
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-[#0052A3]" />
+                <span>Carregando turmas...</span>
               </span>
-              {loadingCourses ? (
-                <span className="inline-flex items-center gap-1.5 text-[#334155]">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-[#0052A3]" />
-                  <span>Buscando turmas criadas...</span>
-                </span>
-              ) : liveCourses.length === 0 ? (
-                <span className="text-[#B45309]">
-                  Nenhuma turma encontrada nesta conta Google. Crie a turma em classroom.google.com
-                  ou informe o link abaixo.
-                </span>
-              ) : (
-                <select
-                  aria-label="Selecionar turma do Google Classroom"
-                  value={selectedCourseId}
-                  onChange={(e) => setSelectedCourseId(e.target.value)}
-                  className="max-w-md rounded-lg border border-[#CBD5E1] bg-white px-3 py-1.5 text-xs font-semibold text-[#0F172A] focus:border-[#0052A3] focus:outline-none"
-                >
-                  {liveCourses.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                      {c.section ? ` — ${c.section}` : ''}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-
-            {liveCourses.length > 0 && (
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#0F766E]">
-                <Pin className="h-3.5 w-3.5" aria-hidden="true" />
-                <span>Turma fixada automaticamente na página inicial</span>
-              </div>
+            ) : (
+              <select
+                aria-label="Selecionar turma do Google Classroom"
+                value={selectedCourseId}
+                onChange={(e) => setSelectedCourseId(e.target.value)}
+                className="max-w-md rounded-lg border border-[#CBD5E1] bg-white px-3 py-1.5 text-xs font-semibold text-[#0F172A] focus:border-[#0052A3] focus:outline-none"
+              >
+                {liveCourses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                    {c.section ? ` — ${c.section}` : ''}
+                  </option>
+                ))}
+              </select>
             )}
           </div>
         )}
@@ -994,116 +788,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
         )}
 
-        {/* Manual / Custom Public Invite Link & Class Code Editor */}
-        {editingClassroomConfig && (
-          <form
-            onSubmit={handleSaveClassroomConfig}
-            className="mt-5 space-y-3 rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] p-4"
-          >
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-[#0F172A]">
-                Configurar Turma e Link de Convite Público
-              </h3>
-              <span className="text-[11px] text-[#475569]">
-                Cole o link de convite e o código da turma do Google Classroom
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <label className="block text-xs font-semibold text-[#1E293B]">
-                  Nome da Turma
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={configDraft.name}
-                  onChange={(e) =>
-                    setConfigDraft((prev) => ({ ...prev, name: e.target.value }))
-                  }
-                  className="mt-1 w-full rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 text-xs text-[#0F172A]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#1E293B]">
-                  Seção / Disciplina
-                </label>
-                <input
-                  type="text"
-                  value={configDraft.section}
-                  onChange={(e) =>
-                    setConfigDraft((prev) => ({ ...prev, section: e.target.value }))
-                  }
-                  className="mt-1 w-full rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 text-xs text-[#0F172A]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#1E293B]">
-                  Link de Convite do Google Classroom
-                </label>
-                <input
-                  type="url"
-                  value={configDraft.inviteLink}
-                  onChange={(e) =>
-                    setConfigDraft((prev) => ({ ...prev, inviteLink: e.target.value }))
-                  }
-                  placeholder="https://classroom.google.com/c/...?cjc=..."
-                  className="mt-1 w-full rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 font-mono text-xs text-[#0F172A]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#1E293B]">
-                  Código da Turma (para participar)
-                </label>
-                <input
-                  type="text"
-                  value={configDraft.enrollmentCode}
-                  onChange={(e) =>
-                    setConfigDraft((prev) => ({ ...prev, enrollmentCode: e.target.value }))
-                  }
-                  placeholder="Ex.: ab12cd3"
-                  className="mt-1 w-full rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 font-mono text-xs text-[#0F172A]"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-[#1E293B]">
-                Descrição da Turma
-              </label>
-              <textarea
-                rows={2}
-                value={configDraft.description}
-                onChange={(e) =>
-                  setConfigDraft((prev) => ({ ...prev, description: e.target.value }))
-                }
-                className="mt-1 w-full rounded-lg border border-[#CBD5E1] bg-white p-2.5 text-xs text-[#0F172A]"
-              />
-            </div>
-
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setEditingClassroomConfig(false)}
-                className="rounded-lg border border-[#CBD5E1] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#334155]"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[#0F766E] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#115E59]"
-              >
-                <Save className="h-3.5 w-3.5" aria-hidden="true" />
-                <span>Salvar Turma e Link</span>
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* Prominent Join & Enrollment Action Bar */}
+        {/* Prominent Join & Enrollment Action Bar (Read-Only Access for Visitors) */}
         <div className="mt-6 grid grid-cols-1 items-center gap-4 rounded-xl border border-[#99F6E4] bg-[#F0FDFA] p-5 lg:grid-cols-12">
           <div className="lg:col-span-5">
             <div className="text-xs font-semibold text-[#0F766E]">
@@ -1113,9 +798,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
               Entre na turma do projeto no Google Classroom
             </p>
             <p className="mt-1 text-xs text-[#334155]">
-              {hasRealJoinLink
-                ? 'Clique no botão ao lado para acessar diretamente a sala ou copie o código de inscrição.'
-                : 'Conecte sua conta Google acima ou clique em "Editar link e código" para fixar o link de convite da sua turma aqui.'}
+              Clique em &ldquo;Entrar na Turma&rdquo; para participar diretamente da sala virtual ou
+              use o código de inscrição abaixo no Google Classroom.
             </p>
           </div>
 
